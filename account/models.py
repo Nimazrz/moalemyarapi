@@ -31,13 +31,20 @@ class CustomUserManager(BaseUserManager):
         return self._create_user(code_meli, password, is_staff=True, is_superuser=True, **other_fields)
 
 
-class Question_designer(AbstractBaseUser, PermissionsMixin):
+class CustomUser(AbstractBaseUser, PermissionsMixin):
+    ROLE_CHOICES = (
+        ('admin', 'Admin'),
+        ('question_desiner', 'Question_desiner'),
+        ('student', 'Student'),
+        ('guest', 'Guest'),
+    )
+
     # required
     code_meli = models.CharField(unique=True, max_length=10)
     username = models.CharField(unique=True, max_length=20)
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
-    is_question_designer = models.BooleanField(default=True)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='guest')
 
     # optional
     phone = models.CharField(max_length=11, blank=True, null=True)
@@ -66,3 +73,32 @@ class Question_designer(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'Question_designer: {self.get_full_name()}'
+
+
+class Admin(models.Model):
+    admin = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='admin',
+                              limit_choices_to={'role': 'admin'})
+
+
+class Question_designer(models.Model):
+    designer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='designer',
+                                 limit_choices_to={'role': 'question_desiner'})
+
+    def __str__(self):
+        return f'Question_designer : {self.designer.username}'
+
+
+class Student(models.Model):
+    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='student',
+                                limit_choices_to={'role': 'student'})
+
+    def __str__(self):
+        return f'Student : {self.student}'
+
+
+class Guest(models.Model):
+    guest = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='guest',
+                              limit_choices_to={'role': 'guest'})
+
+    def __str__(self):
+        return f'Guest : {self.guest}'
